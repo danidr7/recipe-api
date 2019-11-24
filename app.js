@@ -1,7 +1,6 @@
 const express = require('express');
 const app = express();
 const router = express.router;
-
 const recipeRoute = require('./routes/recipe')
 
 app.use('/recipes', recipeRoute)

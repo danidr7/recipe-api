@@ -40,3 +40,14 @@ it('should return 400 when receive more than 3 parameters', function(done) {
     done();
   });
 });
+
+it('should return sorted keywords', function(done) { 
+  chai.request(app)
+  .get('/recipes/?i=chayote,eggplant,carrot')
+  .end(function(err, res) {
+    expect(res.body.keywords[0]).to.equal('carrot');
+    expect(res.body.keywords[1]).to.equal('chayote');
+    expect(res.body.keywords[2]).to.equal('eggplant');
+    done();
+  });
+});
