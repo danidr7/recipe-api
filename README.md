@@ -7,8 +7,8 @@ As receitas são baseadas na API [RecipePuppy](http://www.recipepuppy.com/about/
 ### Pré-requisitos
 
 Estas ferramentas devem ser instaladas:
-- [Node](https://nodejs.org/) - dependência de desenvolvimento
-- [Docker](https://www.docker.com/) - dependência de execução
+- [Node](https://nodejs.org/) 8+ - dependência de desenvolvimento
+- [Docker](https://www.docker.com/) 19+ - dependência de execução
 - [GNU Make](https://www.gnu.org/software/make/) - dependência de execução
 - [GnuPG](https://gnupg.org/) - dependência de execução
 
