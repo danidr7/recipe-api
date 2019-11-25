@@ -1,7 +1,7 @@
 const express = require('express');
 const router = new express.Router();
-const rp = require('request-promise');
-const env = require('../conf/env');
+const giphyService = require('../services/giphy-service');
+const recipeService = require('../services/recipe-service');
 
 router.get('/', (req, res) => {
   let ingredients;
@@ -19,26 +19,19 @@ router.get('/', (req, res) => {
   }
 
   ingredients.sort();
-  const targetRecipe = env.fetchRecipeUrl + '?i=' + ingredients;
-  console.log(targetRecipe);
 
-  rp(targetRecipe)
-    .then((response) => {
-      return JSON.parse(response).results;
-    })
+  recipeService.fetchRecipes(ingredients)
     .then((results) => {
       const promises = [];
       results.map((r) => {
         const i = r.ingredients.split(',');
         const treated = {
           title: r.title,
-          ingredients: i.sort(),
+          ingredients: i.map((item) => item.trim()).sort(),
           link: r.href,
         };
-        promises.push(fetchGifs(treated));
+        promises.push(giphyService.fetchGif(treated));
       });
-      return promises;
-    }).then((promises) => {
       return Promise.all(promises);
     }).then((recipeList) => {
       const r = {
@@ -52,23 +45,13 @@ router.get('/', (req, res) => {
       if (error.statusCode >= 500) {
         msg = 'recipe service is unavailable!';
       }
-      
-      let status = error.statusCode ? error.statusCode : 500;
 
-      console.error('fails attempting get recipes: ', error);
+      const status = error.statusCode ? error.statusCode : 500;
+
+      console.error(msg, error);
       res.status(status).send(msg);
       return;
     });
 });
-
-fetchGifs = (result) => {
-  const targetGiphy = 'http://' + env.fetchGiphyUrl + '?api_key=' + env.giphyApiKey + '&tag=' + result.title;
-  return rp(targetGiphy)
-    .then((gif) => {
-      const url = JSON.parse(gif).data.url;
-      result.gif = url;
-      return result;
-    });
-};
 
 module.exports = router;
