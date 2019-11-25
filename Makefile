@@ -1,4 +1,7 @@
 SHELL = /bin/sh
+
+$(shell touch app.env)
+
 include app.env
 export $(shell sed 's/=.*//' app.env)
 
@@ -31,8 +34,16 @@ docker-build:
 
 .PHONY: docker-run
 docker-run:
-	docker run -d -p 3000:3000 --name $(CONTAINER_NAME) --env-file app.env $(IMAGE_NAME)
+	docker run -d -p $(API_PORT):$(API_PORT) --name $(CONTAINER_NAME) --env-file app.env $(IMAGE_NAME)
 
 .PHONY: docker-clean
 docker-clean:
 	docker rm -f $(CONTAINER_NAME)
+
+.PHONY: encrypt-env
+encrypt-env:
+	gpg -c app.env
+
+.PHONY: decrypt-env
+decrypt-env:
+	gpg app.env.gpg
