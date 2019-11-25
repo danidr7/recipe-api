@@ -1,5 +1,5 @@
 const express = require('express');
-const router = express.Router();
+const router = new express.Router();
 const rp = require('request-promise');
 
 const fetchRecipeUrl = process.env.FETCH_RECIPE_URL;
@@ -17,58 +17,61 @@ router.get('/', (req, res) => {
       return;
     }
   } catch (e) {
-  	console.error('fails attempting get ingredients: ', e);
-  	res.status(400).send('Bad Request');
+    console.error('fails attempting get ingredients: ', e);
+    res.status(400).send('Bad Request');
   }
 
   ingredients.sort();
   const targetRecipe = fetchRecipeUrl + '?i=' + ingredients;
+  console.log(targetRecipe);
 
   rp(targetRecipe)
-      .then((response) => {
-    	return JSON.parse(response).results;
-      })
-  	.then((results) => {
-  	  const promises = [];
-  	  results.map((r) => {
-  	  	const i = r.ingredients.split(',');
-  	  	const treated = {
-  	  	  title: r.title,
-       	  ingredients: i,
-       	  link: r.href,
-       	};
-  	  	promises.push(fetchGifs(treated));
-  	  });
-  	  return promises;
-  	}).then((promises) => {
-  		return Promise.all(promises);
-  	}).then((recipeList) => {
-  		const r = {
-          keywords: ingredients,
-          recipes: recipeList,
-  		};
-  		res.send(r);
-  	})
-  	.catch((error) => {
-  		let msg = 'fails attempting get recipes!';
-  		if (error.statusCode >= 500) {
-  		  msg = 'recipe service is unavailable!';
-  	    }
+    .then((response) => {
+      return JSON.parse(response).results;
+    })
+    .then((results) => {
+      const promises = [];
+      results.map((r) => {
+        const i = r.ingredients.split(',');
+        const treated = {
+          title: r.title,
+          ingredients: i,
+          link: r.href,
+        };
+        promises.push(fetchGifs(treated));
+      });
+      return promises;
+    }).then((promises) => {
+      return Promise.all(promises);
+    }).then((recipeList) => {
+      const r = {
+        keywords: ingredients,
+        recipes: recipeList,
+      };
+      res.send(r);
+    })
+    .catch((error) => {
+      let msg = 'fails attempting get recipes!';
+      if (error.statusCode >= 500) {
+        msg = 'recipe service is unavailable!';
+      }
+      
+      let status = error.statusCode ? error.statusCode : 500;
 
-  		console.error('fails attempting get recipes: ', error.statusCode);
-  		res.status(error.statusCode).send(msg);
-  		return;
-  	});
+      console.error('fails attempting get recipes: ', error);
+      res.status(status).send(msg);
+      return;
+    });
 });
 
 fetchGifs = (result) => {
   const targetGiphy = 'http://' + fetchGiphyUrl + '?api_key=' + giphyApiKey + '&tag=' + result.title;
   return rp(targetGiphy)
-      .then((gif) => {
-        const url = JSON.parse(gif).data.url;
-  	  result.gif = url;
-  	  return result;
-      });
+    .then((gif) => {
+      const url = JSON.parse(gif).data.url;
+      result.gif = url;
+      return result;
+    });
 };
 
 module.exports = router;
