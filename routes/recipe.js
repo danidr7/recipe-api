@@ -1,10 +1,7 @@
 const express = require('express');
 const router = new express.Router();
 const rp = require('request-promise');
-
-const fetchRecipeUrl = process.env.FETCH_RECIPE_URL;
-const fetchGiphyUrl = process.env.FETCH_GIPHY_URL;
-const giphyApiKey = process.env.GIPHY_API_KEY;
+const env = require('../conf/env');
 
 router.get('/', (req, res) => {
   let ingredients;
@@ -22,7 +19,7 @@ router.get('/', (req, res) => {
   }
 
   ingredients.sort();
-  const targetRecipe = fetchRecipeUrl + '?i=' + ingredients;
+  const targetRecipe = env.fetchRecipeUrl + '?i=' + ingredients;
   console.log(targetRecipe);
 
   rp(targetRecipe)
@@ -35,7 +32,7 @@ router.get('/', (req, res) => {
         const i = r.ingredients.split(',');
         const treated = {
           title: r.title,
-          ingredients: i,
+          ingredients: i.sort(),
           link: r.href,
         };
         promises.push(fetchGifs(treated));
@@ -65,7 +62,7 @@ router.get('/', (req, res) => {
 });
 
 fetchGifs = (result) => {
-  const targetGiphy = 'http://' + fetchGiphyUrl + '?api_key=' + giphyApiKey + '&tag=' + result.title;
+  const targetGiphy = 'http://' + env.fetchGiphyUrl + '?api_key=' + env.giphyApiKey + '&tag=' + result.title;
   return rp(targetGiphy)
     .then((gif) => {
       const url = JSON.parse(gif).data.url;

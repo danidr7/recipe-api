@@ -1,11 +1,12 @@
 const express = require('express');
 const app = express();
 const recipeRoute = require('./routes/recipe');
+const env = require('./conf/env');
 
 app.use('/recipes', recipeRoute);
 
-app.listen(process.env.API_PORT, () => {
-  console.log('running at: ' + process.env.API_PORT);
+app.listen(env.apiPort, () => {
+  console.log('running at: ' + env.apiPort);
 });
 
 module.exports = app;
