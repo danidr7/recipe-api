@@ -52,12 +52,15 @@ it('should return sorted keywords', function(done) {
     });
 });
 
-it('should return recipes with a gif', function(done) {
+it('should return recipes with a gif, link, title and ingredients', function(done) {
   chai.request(app)
     .get('/recipes/?i=milk,banana')
     .end(function(err, res) {
       res.body.recipes.forEach((item) => {
-        expect(item).to.not.be.empty;
+        expect(item.gif).to.not.be.empty;
+        expect(item.ingredients).to.not.be.empty;
+        expect(item.link).to.not.be.empty;
+        expect(item.title).to.not.be.empty;
       });
       done();
     });
