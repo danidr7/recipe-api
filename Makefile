@@ -1,8 +1,6 @@
 SHELL = /bin/sh
 
-$(shell [ -f app.env ] || touch app.env)
-
-include app.env
+-include app.env
 export $(shell sed 's/=.*//' app.env)
 
 IMAGE_NAME=recipe-api
