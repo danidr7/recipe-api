@@ -3,7 +3,7 @@ const router = new express.Router();
 const giphyService = require('../services/giphy-service');
 const recipeService = require('../services/recipe-service');
 
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   let ingredients;
   try {
     ingredients = req.query.i ? req.query.i.split(',') : [];
@@ -16,42 +16,41 @@ router.get('/', (req, res) => {
   } catch (e) {
     console.error('fails attempting get ingredients: ', e);
     res.status(400).send('Bad Request');
+    return;
   }
 
-  ingredients.sort();
-
-  recipeService.fetchRecipes(ingredients)
-    .then((results) => {
-      const promises = [];
-      results.map((r) => {
-        const i = r.ingredients.split(',');
-        const treated = {
-          title: r.title,
-          ingredients: i.map((item) => item.trim()).sort(),
-          link: r.href,
-        };
-        promises.push(giphyService.fetchGif(treated));
-      });
-      return Promise.all(promises);
-    }).then((recipeList) => {
-      const r = {
-        keywords: ingredients,
-        recipes: recipeList,
-      };
-      res.send(r);
-    })
-    .catch((error) => {
-      let msg = 'fails attempting get recipes!';
-      if (error.statusCode >= 500) {
-        msg = 'recipe service is unavailable!';
-      }
-
-      const status = error.statusCode ? error.statusCode : 500;
-
-      console.error(msg, error);
-      res.status(status).send(msg);
+  try {
+    ingredients.sort();
+    const results = await recipeService.fetchRecipes(ingredients);
+    if (!results) {
+      res.status(404).send('no one recipe was found');
       return;
+    }
+
+    const promises = results.map(async (r) => {
+      const g = await giphyService.fetchGif(r.title);
+      const ing = r.ingredients.split(',');
+
+      return {
+        title: r.title,
+        ingredients: ing.map((item) => item.trim()).sort(),
+        link: r.href,
+        gif: g,
+      };
     });
+
+    treated = await Promise.all(promises);
+
+    const resr = {
+      keywords: ingredients,
+      recipes: treated,
+    };
+
+    res.status(200).send(resr);
+  } catch (error) {
+    console.log(error)
+    res.status(500).send('internal error');
+  }
 });
 
 module.exports = router;

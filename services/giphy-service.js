@@ -1,16 +1,16 @@
 const env = require('../conf/env');
-const rp = require('request-promise');
+const axios = require('axios');
 
 module.exports = {
-  fetchGif: (result) => {
-    const targetGiphy = env.fetchGiphyUrl + '?api_key=' +
-    env.giphyApiKey + '&tag=' + result.title;
 
-    return rp(targetGiphy)
-      .then((gif) => {
-        const url = JSON.parse(gif).data.url;
-        result.gif = url;
-        return result;
-      });
+  fetchGif: async (title) => {
+    const targetGiphy = env.fetchGiphyUrl + '?api_key=' +
+    env.giphyApiKey + '&tag=' + title;
+    try {
+      const response = await axios.get(targetGiphy);
+      return response.data.data.url;
+    } catch (error) {
+      console.log(error);
+    }
   },
 };

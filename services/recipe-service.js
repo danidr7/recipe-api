@@ -1,14 +1,16 @@
 const env = require('../conf/env');
-const rp = require('request-promise');
+const axios = require('axios');
 
 module.exports = {
 
-  fetchRecipes: (params) => {
+  fetchRecipes: async (params) => {
     const targetRecipe = env.fetchRecipeUrl + '?i=' + params;
-
-    return rp(targetRecipe)
-      .then((response) => {
-        return JSON.parse(response).results;
-      });
+    try {
+      const response = await axios.get(targetRecipe);
+      return response.data.results;
+    } catch (error) {
+      console.log(error);
+    }
   },
+
 };
