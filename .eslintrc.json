@@ -20,5 +20,8 @@
     },
     "plugins": [
       "security"
+    ],
+    "ignorePatterns": [
+      "test/*"
     ]
 }
