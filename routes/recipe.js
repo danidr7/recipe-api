@@ -3,30 +3,39 @@ const router = new express.Router();
 const giphyService = require('../services/giphy-service');
 const recipeService = require('../services/recipe-service');
 
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
   let ingredients;
+
   try {
     ingredients = req.query.i ? req.query.i.split(',') : [];
 
     if (!ingredients.length || ingredients.length > 3) {
-      console.log('invalid amount of ingredients: ' + ingredients.length);
-      res.status(400).send('Bad Request');
+      const err = 'invalid amount of ingredients: ' + ingredients.length;
+      console.log(err);
+      status = 400;
+      res.status(status).send({
+        title: err,
+        status: status,
+        detail: 'you should send 1 to 3 ingredients',
+      });
       return;
     }
-  } catch (e) {
-    console.error('fails attempting get ingredients: ', e);
-    res.status(400).send('Bad Request');
-    return;
-  }
 
-  try {
     ingredients.sort();
     const results = await recipeService.fetchRecipes(ingredients);
     if (!results) {
-      res.status(404).send('no one recipe was found');
+      const err = 'no one recipe was found';
+      console.log(err);
+      status = 400;
+      res.status(status).send({
+        title: err,
+        status: status,
+        detail: 'your ingredients match no recipe, try a different combination',
+      });
       return;
     }
 
+    // This way, with promises, increase performance a lot
     const promises = results.map(async (r) => {
       const g = await giphyService.fetchGif(r.title);
       const ing = r.ingredients.split(',');
@@ -39,7 +48,7 @@ router.get('/', async (req, res) => {
       };
     });
 
-    treated = await Promise.all(promises);
+    const treated = await Promise.all(promises);
 
     const resr = {
       keywords: ingredients,
@@ -47,9 +56,15 @@ router.get('/', async (req, res) => {
     };
 
     res.status(200).send(resr);
-  } catch (error) {
-    console.log(error)
-    res.status(500).send('internal error');
+  } catch (e) {
+    const err = 'fails attempting get ingredients: '+ e;
+    console.log(err);
+    status = 500;
+    res.status(status).send({
+      title: 'something wrong happened. Please, try again later',
+      status: status,
+    });
+    return;
   }
 });
 
